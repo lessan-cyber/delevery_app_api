@@ -22,7 +22,7 @@ def get_db():
     finally:
         db.close()
 
-def test_database_connection():
+def test_database_connection():           
     print(settings.postgres_db)
     print("Testing database connection...")
     while True:
@@ -41,4 +41,4 @@ def test_database_connection():
             print(f"Failed to connect to database: {e}")
             time.sleep(5)
         
-            
+                 
