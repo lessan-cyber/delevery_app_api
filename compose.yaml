@@ -6,21 +6,30 @@
 # This service is built from the Dockerfile in the current directory.
 # You can add other services your application may depend on here, such as a
 # database or a cache. For examples, see the Awesome Compose repository:
-# https://github.com/docker/awesome-compose
+# https://github.com/docker/awesomwhen i run the command on the container it works but when i run the command with the docker compose command it didn't worke-compose
 services:
   api:
-
     build: .
     command: uvicorn main:app --host 0.0.0.0 --reload
+    env_file:
+      - .env
     ports:
       - 8000:8000
+    volumes:
+      - ./alembic/:/app/alembic/
+      - ./alembic.ini:/app/alembic.in
+      - ./scripts/:/app/scripts/
     develop:
       watch:
         - action: sync+restart
-          path: ./
-          target: ./app
+          path: ./app
+          target: ./app/app
         - action: rebuild
-          path: requirements.txt
+          path: ./requirements.txt
+          target: ./app/requirements.txt
+        - action: sync+restart
+          path: ./main.py
+          target: ./app/main.py
     environment:
       POSTGRES_HOST: db
     depends_on:
@@ -30,7 +39,7 @@ services:
   db:
     image: postgres
     env_file:
-      - .env.dev
+      - .env
     restart: always
     user: postgres
 
@@ -47,5 +56,14 @@ services:
       retries: 5
     volumes:
       - db-data:/var/lib/postgresql/data
+
+  redis-db:
+    image: redis:latest
+    ports:
+      - "6555:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   db-data:
+  redis_data:

@@ -1,0 +1,15 @@
+{
+    "editor.fontFamily": " 'JetBrains Mono Medium', '0xProto Nerd', 'monospace', monospace",
+    "terminal.integrated.fontSize": 18,
+    "editor.cursorBlinking": "smooth",
+    "editor.inlayHints.fontFamily": "",
+    "editor.inlayHints.fontSize": 14,
+    "editor.fontSize": 17,
+    "editor.fontLigatures": true,
+    "terminal.integrated.fontFamily": "JetBrains Mono ",
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

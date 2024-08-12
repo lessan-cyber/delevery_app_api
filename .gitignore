@@ -1,2 +1,4 @@
-.env.dev
-.venv
+.env
+.venv/
+.vscode/
+.idea/
