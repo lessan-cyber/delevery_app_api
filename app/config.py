@@ -1,6 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
     postgres_user: str
@@ -10,8 +9,18 @@ class Settings(BaseSettings):
     postgres_port: int
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
-    access_token_expire_minites: int = 60 
     redis_host: str
     redis_port: int
+    access_token_expiration:int
+    refresh_token_expiration:int
+    minio_access_key: str
+    minio_secret_key: str
+    minio_endpoint: str
+    minio_port: int
+    minio_use_ssl: bool
+    minio_bucket: str
+    minio_url: str
+
+
 settings = Settings()
 

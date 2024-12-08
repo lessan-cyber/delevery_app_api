@@ -22,7 +22,7 @@ class Role(RoleInDBBase):
     permissions: List['Permission'] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PermissionBase(BaseModel):
     name: str
@@ -40,4 +40,4 @@ class Permission(PermissionInDBBase):
     roles: List['Role'] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True

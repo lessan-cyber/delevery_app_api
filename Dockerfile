@@ -1,4 +1,4 @@
-FROM python:3.12-alpine
+FROM python:3.13.0-alpine
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -14,9 +14,8 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser
-RUN python -m venv venv
-RUN source venv/bin/activate
-RUN pip install --upgrade pip
+
+RUN  pip install --upgrade pip
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt

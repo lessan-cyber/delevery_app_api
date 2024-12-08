@@ -41,12 +41,13 @@ async def update_driver_profile(user_update: UserUpdate, driver_update:DriverPro
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail="driver not found").first() 
     validate_driver_inputs_on_update(db, current_user.id,user_update, driver_update)
 
+
     try:
         user = update_driver(db,current_user.id, user_update, driver_update)
         driver_profile = db.query(DriverProfile).filter(DriverProfile.user_id == user.id).first()
         user_response = get_user_response(user)
 
-        await delete_access_token(current_user.id)  
+        #await delete_access_token(current_user.id)  
         return {
             "user": user_response,
             "license_number": driver_profile.license_number,

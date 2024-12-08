@@ -1,12 +1,3 @@
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Docker Compose reference guide at
-# https://docs.docker.com/go/compose-spec-reference/
-
-# Here the instructions define your application as a service called "server".
-# This service is built from the Dockerfile in the current directory.
-# You can add other services your application may depend on here, such as a
-# database or a cache. For examples, see the Awesome Compose repository:
-# https://github.com/docker/awesomwhen i run the command on the container it works but when i run the command with the docker compose command it didn't worke-compose
 services:
   api:
     build: .
@@ -14,10 +5,10 @@ services:
     env_file:
       - .env
     ports:
-      - 8000:8000
+      - "8000:8000"
     volumes:
       - ./alembic/:/app/alembic/
-      - ./alembic.ini:/app/alembic.in
+      - ./alembic.ini:/app/alembic.ini
       - ./scripts/:/app/scripts/
     develop:
       watch:
@@ -35,14 +26,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  
+      minio:
+        condition: service_healthy
+      redis-db:
+        condition: service_healthy
+    networks:
+      - app-network
+
   db:
     image: postgres
     env_file:
       - .env
     restart: always
     user: postgres
-
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -56,6 +52,8 @@ services:
       retries: 5
     volumes:
       - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
   redis-db:
     image: redis:latest
@@ -63,7 +61,62 @@ services:
       - "6555:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - app-network
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server --console-address ":9001" /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
+  createbucket:
+      image: minio/mc:latest
+      depends_on:
+        - minio
+      entrypoint: >
+        /bin/sh -c "
+        /usr/bin/mc config host add --api s3v4 s3 http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY};
+        /usr/bin/mc mb s3/gozem/;
+        /usr/bin/mc anonymous set download s3/gozem/;
+        "
+      networks:
+        - app-network
+  ngnix:
+    image: nginx:latest
+    ports:
+      - "80:80"  # Redirige les requêtes vers le conteneur NGINX
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Ajoute la configuration de NGINX
+    depends_on:
+      - api
+      - minio
+    networks:
+      - app-network
 
 volumes:
   db-data:
   redis_data:
+  minio_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -3,11 +3,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.database import Base
 
-role_permissions = Table(
+
+"""role_permissions = Table(
     "role_permission", Base.metadata,
     Column("role_id", Integer, ForeignKey("roles.id"), primary_key=True),
     Column("permission_id", Integer, ForeignKey("permissions.id"), primary_key=True)
-)
+)"""
 
 class User(Base):
     __tablename__ = "users"
@@ -21,9 +22,9 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
-    role_id = Column(Integer, ForeignKey("roles.id"))
-
-    role = relationship("Role", back_populates="users")
+    #role_id = Column(Integer, ForeignKey("roles.id"))
+    #role = relationship("Role", back_populates="users")
+    role = Column(String(50), nullable=False)
     customer_profile = relationship("CustomerProfile", uselist=False, back_populates="user")
     driver_profile = relationship("DriverProfile", uselist=False, back_populates="user")
     company_profile = relationship("CompanyProfile", uselist=False, back_populates="user")
@@ -31,7 +32,7 @@ class User(Base):
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
 
-class Role(Base):
+""" class Role(Base):
     __tablename__ = "roles"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), unique=True, nullable=False)
@@ -54,7 +55,7 @@ class Permission(Base):
     roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
 
     def __repr__(self):
-        return f"<Permission(id={self.id}, name={self.name})>"
+        return f"<Permission(id={self.id}, name={self.name})>" """
 
 class CustomerProfile(Base):
     __tablename__ = "customer_profiles"
