@@ -22,7 +22,9 @@ async def create_product_route(
     category_ids: List[int] = Form(...),
     images: List[UploadFile] = File(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    currency: str = Form(...)
+
 ):
     # Check if user is a seller
     company_profile = db.query(CompanyProfile).filter(CompanyProfile.user_id == current_user.id).first()
@@ -43,7 +45,8 @@ async def create_product_route(
         discount=discount,
         category_ids=category_ids,
         images=images,
-        seller_id=current_user.id 
+        seller_id=current_user.id ,
+        currency = currency
     )
 
     try:

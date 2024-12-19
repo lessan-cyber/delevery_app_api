@@ -49,6 +49,7 @@ class ProductBase(BaseModel):
     price: float
     stock: int
     discount: Optional[float] = None
+    currency: str
 
 class ProductImageCreate(BaseModel):
     id: int
@@ -84,7 +85,7 @@ class ProductResponse(ProductBase):
     images: List[ProductImage] = []
 
     class Config:
-        from_attributes = True
+        orm_mode = True
         
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -101,4 +102,4 @@ class ProductUpdate(BaseModel):
         return images
 
     class Config:
-          from_attributes = True
+          orm_mode = True

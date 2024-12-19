@@ -26,7 +26,7 @@ class ProductImage(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     image_url = Column(String(255), nullable=False)  # URL ou chemin de l'image
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)  # Référence au produit
-
+    
     # Relation avec le produit
     product = relationship('Product', back_populates='images')
 
@@ -45,6 +45,7 @@ class Product(Base):
     stock = Column(Integer, nullable=False, default=0)
     discount = Column(DECIMAL(3, 2), nullable=True)
     seller_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    currency = Column(String(50), nullable = False )
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)
 
