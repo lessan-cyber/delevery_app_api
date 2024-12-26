@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Table, ForeignKey, Text, TIMESTAMP, DECIMAL
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Table, ForeignKey, Text, TIMESTAMP, DECIMAL, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.database import Base
@@ -43,7 +43,6 @@ class Product(Base):
     price = Column(DECIMAL(10, 2), nullable=False)
     image_url = Column(String(255), nullable=True)  # Optionnel, si tu veux une image principale
     stock = Column(Integer, nullable=False, default=0)
-    discount = Column(DECIMAL(3, 2), nullable=True)
     seller_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     currency = Column(String(50), nullable = False )
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
@@ -55,6 +54,9 @@ class Product(Base):
     # Relation one-to-many avec les images du produit
     images = relationship('ProductImage', back_populates='product', cascade='all, delete')
 
+    # Add these relationships
+    product_categories = relationship("ProductCategory", back_populates="product")
+
     def __repr__(self):
         return f"<Product(name={self.name}, price={self.price})>"
     
@@ -63,3 +65,17 @@ class ProductCategory(Base):
 
     product_id = Column(Integer, ForeignKey('products.id'), primary_key=True)
     category_id = Column(Integer, ForeignKey('categories.id'), primary_key=True)
+
+    # Add these relationships
+    product = relationship("Product", back_populates="product_categories")
+    category = relationship("Category")
+
+
+class Discount(Base):
+    __tablename__ = 'discounts'
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    discount_percentage = Column(DECIMAL(3, 2), nullable=False)
+    start_date = Column(TIMESTAMP, nullable=False)
+    end_date = Column(TIMESTAMP, nullable=False)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)

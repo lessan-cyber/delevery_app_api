@@ -72,3 +72,15 @@ async def upload_file(file: UploadFile, bucket_name: str, object_name: str):
         return image_url
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Upload error: {e}")
+    
+
+async def delete_file(bucket_name: str, object_name: str):
+    try:
+        minio_client.remove_object(bucket_name, object_name)
+        log.info(f"Deleted {object_name} from {bucket_name}")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Delete error: {e}")
+
+
+async def get_file_url(bucket_name: str, object_name: str):
+    return f"http://{s.minio_url}/media/{object_name}"
