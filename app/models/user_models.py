@@ -32,30 +32,7 @@ class User(Base):
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
 
-""" class Role(Base):
-    __tablename__ = "roles"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), unique=True, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
-    users = relationship("User", back_populates="role")
-    permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
-
-    def __repr__(self):
-        return f"<Role(id={self.id}, name={self.name})>"
-
-class Permission(Base):
-    __tablename__ = "permissions"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), unique=True, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
-
-    roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
-
-    def __repr__(self):
-        return f"<Permission(id={self.id}, name={self.name})>" """
 
 class CustomerProfile(Base):
     __tablename__ = "customer_profiles"

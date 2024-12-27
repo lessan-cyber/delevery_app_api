@@ -1,2 +1,2 @@
-from .user_models import User,  CustomerProfile, DriverProfile, CompanyProfile
-from .product_models import Product, Category, ProductImage, ProductCategory
+from .product_models import Product, Category, ProductImage, ProductCategory, Discount
+from .user_models import User, CompanyProfile, CustomerProfile

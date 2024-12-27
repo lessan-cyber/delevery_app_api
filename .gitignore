@@ -2,3 +2,5 @@
 .venv/
 .vscode/
 .idea/
+docker_postgres.session.sql
+minio_init_sh

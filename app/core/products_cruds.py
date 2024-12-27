@@ -1,13 +1,13 @@
-from app.models.product_models import Category, Product, ProductCategory, ProductImage 
+from app.models.product_models import Category, Product, ProductCategory, ProductImage , Discount
+from app.schemas.product_schema import ProductWithDiscount
 from sqlalchemy.orm import Session
 from app.schemas import ProductCreate , ProductResponse , ProductImage as ProductImageSchema, ProductUpdate
 from typing import List
-from fastapi import HTTPException, status, UploadFile 
+from fastapi import HTTPException, status
 from app.db.minio import upload_file, delete_file
 from ..config import settings as s
 from ..utils import log
-
-
+from app.utils.utils import get_utc_now
 async def create_new_product(db: Session, product_in: ProductCreate):
     # Create the product instance
     product = Product(
@@ -197,3 +197,22 @@ async def delete_product(db: Session, product_id: int, user_id: int):
     db.delete(product)
     db.commit()
     return {"message": "Product deleted successfully"}
+
+
+# get a product with its discounts
+async def get_product_with_discounts(db: Session, product_id: int):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # check if the product has an active discount
+    current_time = get_utc_now()
+    discount = db.query(Discount).filter(
+        Discount.product_id == product.id,
+        Discount.start_date <= current_time,
+        Discount.end_date > current_time
+    ).first()
+
+    # Use the new helper method to create the response
+    return ProductWithDiscount.from_orm_with_discount(product, discount)
+

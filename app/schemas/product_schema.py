@@ -1,11 +1,14 @@
-from pydantic import BaseModel , HttpUrl
+from pydantic import BaseModel
 from typing import List, Optional
 from .category_schema import Category
+from .discount_schema import DiscountResponse
 from fastapi import UploadFile
+from decimal import Decimal
+
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
-    price: float
+    price: Decimal
     stock: int
     currency: str
 
@@ -24,15 +27,21 @@ class ProductImage(BaseModel):
         from_attributes = True
 
 class ProductCreate(ProductBase):
-    category_ids: List[int]  # Liste des IDs des catégories associées
-    images: Optional[List[UploadFile]] = None  # List of image files (up to 3)
+    category_ids: List[int]
+    images: Optional[List[UploadFile]] = None
     seller_id: int
 
-    @classmethod
-    def validate_images(cls, images: Optional[List[UploadFile]]):
-        if images and len(images) > 3:
-            raise ValueError("A product can have up to 3 images.")
-        return images
+    class Config:
+        from_attributes = True
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[Decimal] = None
+    stock: Optional[int] = None
+    category_ids: Optional[List[int]] = None
+    images: Optional[List[UploadFile]] = None
+    currency: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -44,24 +53,25 @@ class ProductResponse(ProductBase):
 
     class Config:
         from_attributes = True
-        
 
-class ProductUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[float] = None
-    stock: Optional[int] = None
-    discount: Optional[float] = None
-    currency: Optional[str] = None
-    category_ids: Optional[List[int]] = None
-    images: Optional[List[UploadFile]] = None  # List of image files (up to 3)
-
-    @classmethod
-    def validate_images(cls, images: Optional[List[HttpUrl]]):
-        if images and len(images) > 3:
-            raise ValueError("A product can have up to 3 images.")
-        return images
+class ProductWithDiscount(ProductResponse):
+    discount: Optional[DiscountResponse] = None
 
     class Config:
         from_attributes = True
-          
+
+    @classmethod
+    def from_orm_with_discount(cls, product, discount=None):
+        return cls(
+            id=product.id,
+            name=product.name,
+            description=product.description,
+            price=product.price,
+            stock=product.stock,
+            currency=product.currency,
+            categories=[Category(id=pc.category.id, name=pc.category.name) 
+                       for pc in product.product_categories],
+            images=[ProductImage(id=img.id, image_url=img.image_url) 
+                   for img in product.images],
+            discount=DiscountResponse.from_orm(discount) if discount else None
+        )

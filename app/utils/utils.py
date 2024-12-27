@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from ..schemas import UserResponse
 import logging
 def get_user_response(user):
@@ -23,3 +24,8 @@ def configure_logging():
 
 
 log = configure_logging()
+
+def get_utc_now():
+    """Get current UTC time with timezone information"""
+    return datetime.now(timezone.utc)
+

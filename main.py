@@ -2,7 +2,7 @@ from app.db.database import test_database_connection, Base, engine
 import logging
 from sqlalchemy import inspect
 from fastapi import FastAPI
-from app.api import customer_routes, driver_routes, company_routes, user_routes, category_routes, product_routes
+from app.api import customer_routes, driver_routes, company_routes, user_routes, category_routes, product_routes, discount_routes
 from app.db import test_redis_connection
 from app.db.minio import verify_minio_connection
 # Configure logging
@@ -36,6 +36,7 @@ app.include_router(company_routes.router)
 app.include_router(user_routes.router)
 app.include_router(category_routes.router)
 app.include_router(product_routes.router)
+app.include_router(discount_routes.router)
 test_database_connection()  
 init_db()
 

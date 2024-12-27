@@ -56,7 +56,7 @@ services:
       - app-network
 
   redis-db:
-    image: redis:latest
+    image: redis
     ports:
       - "6555:6379"
     volumes:
@@ -90,7 +90,7 @@ services:
       - app-network
 
   createbucket:
-      image: minio/mc:latest
+      image: minio/mc
       depends_on:
         - minio
       entrypoint: >

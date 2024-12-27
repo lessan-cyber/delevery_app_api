@@ -40,7 +40,7 @@ def update_driver(db: Session, user_id: int, user_update, driver_profile_update)
     existing_user.updated_at = datetime.now()
     existing_profile = db.query(DriverProfile).filter(DriverProfile.user_id == user_id).first()
     # Update the driver profile
-    profile_update_dict = driver_profile_update.dict(exclude_unset=True) if hasattr(driver_profile_update, 'dict') else driver_profile_update
+    profile_update_dict = driver_profile_update.dict(exc8lude_unset=True) if hasattr(driver_profile_update, 'dict') else driver_profile_update
     for key, value in profile_update_dict.items():
         setattr(existing_profile, key, value)
     existing_profile.updated_at = datetime.now()

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, Form, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.schemas.product_schema import ProductCreate, ProductResponse, ProductUpdate
+from app.schemas.product_schema import ProductCreate, ProductResponse, ProductUpdate, ProductWithDiscount
 from app.db import get_db
 from app.core.auth import get_current_user
-from app.core.products_cruds import create_new_product, updateProduct , delete_product
+from app.core.products_cruds import create_new_product, updateProduct , delete_product , get_product_with_discounts as get_product_with_discounts_crud
 from app.models.user_models import CompanyProfile, User
 import json
 
@@ -130,3 +130,11 @@ async def delete_product_route(
 ):
     await delete_product(db, product_id, current_user.id)
     return {"message": "Product deleted successfully"}
+
+
+@router.get("/{product_id}", response_model=ProductWithDiscount)
+async def get_product_with_discounts(
+    product_id: int,
+    db: Session = Depends(get_db)
+):
+    return await get_product_with_discounts_crud(db, product_id)
