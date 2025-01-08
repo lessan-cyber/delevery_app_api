@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     minio_use_ssl: bool
     minio_bucket: str
     minio_url: str
+    exchange_api_id:str
 
 
 settings = Settings()

@@ -5,6 +5,7 @@ from .users_schemas import User, UserResponse
 
 class CustomerProfileBase(BaseModel):
     default_address: Optional[str] = None
+    preferred_currency: Optional[str] = None
 
 class CustomerProfileCreate(CustomerProfileBase):
     pass
@@ -24,6 +25,7 @@ class CustomerProfile(CustomerProfileInDB):
 class CustomerResponse(BaseModel):
     user: UserResponse
     default_address: str
+    preferred_currency: str
     class Config:
         from_attributes = True
 
@@ -31,6 +33,7 @@ class DriverProfileBase(BaseModel):
     license_number: str
     vehicle_type: str
     is_verified: bool = False
+    preferred_currency: Optional[str] = None    
 
 class DriverProfileCreate(DriverProfileBase):
     pass
@@ -39,6 +42,7 @@ class DriverProfileUpdate(DriverProfileBase):
     license_number: Optional[str] = None
     vehicle_type: Optional[str] = None
     is_verified: Optional[bool] = None
+    preferred_currency: Optional[str] = None
 
 class DriverProfileInDB(DriverProfileBase, TimestampModel):
     user_id: int
@@ -54,6 +58,7 @@ class DriverResponse(BaseModel):
     license_number: str
     vehicle_type: str
     is_verified: bool
+    preferred_currency: Optional[str] = None
     class Config:
         from_attributes = True
 class CompanyProfileBase(BaseModel):
@@ -61,7 +66,7 @@ class CompanyProfileBase(BaseModel):
     business_type: Optional[str] = None
     company_id: str
     address: str
-
+    preferred_currency: Optional[str] = None
 class CompanyProfileCreate(CompanyProfileBase):
     pass
 
@@ -70,7 +75,7 @@ class CompanyProfileUpdate(CompanyProfileBase):
     business_type: Optional[str] = None
     company_id: Optional[str] = None
     address: Optional[str] = None
-
+    
 class CompanyProfileInDB(CompanyProfileBase, TimestampModel):
     user_id: int
 
@@ -80,6 +85,7 @@ class CompanyResponse(BaseModel):
     business_type: str
     company_id: Optional[str] = None
     address: str
+    preferred_currency: Optional[str] = None
     class Config:
         from_attributes = True
 

@@ -5,10 +5,13 @@ from fastapi import FastAPI
 from app.api import customer_routes, driver_routes, company_routes, user_routes, category_routes, product_routes, discount_routes
 from app.db import test_redis_connection
 from app.db.minio import verify_minio_connection
+from contextlib import asynccontextmanager
+from app.utils.currency_exchange import get_exchange_rates
+from fastapi_utilities import repeat_every
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI(debug=True)
+
 
 def init_db():
     inspector = inspect(engine)
@@ -20,11 +23,18 @@ def init_db():
     Base.metadata.create_all(engine)
     logging.info("Database created successfully!")
 
-@app.on_event("startup")
-async def startup_event():
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) :
     await test_redis_connection()
     await verify_minio_connection()
+    await get_exchange_job()
+    yield
+
+
     
+app = FastAPI(debug=True, 
+              lifespan=lifespan)
 
 @app.get("/")
 def read_root():
@@ -40,3 +50,7 @@ app.include_router(discount_routes.router)
 test_database_connection()  
 init_db()
 
+@repeat_every(seconds=3600) # one hour 
+async def get_exchange_job():
+    print("hooooooo")
+    await get_exchange_rates()

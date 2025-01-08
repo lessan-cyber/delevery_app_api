@@ -5,7 +5,6 @@ from app.core.auth import get_current_user
 from app.models.user_models import User
 from app.models.product_models import Product, Discount
 from app.schemas.discount_schema import DiscountCreate, DiscountResponse, DiscountUpdate
-from datetime import datetime
 from app.core.discount_cruds import create_new_discount, update_discount as update_discount_crud, delete_discount as delete_discount_crud   
 
 router = APIRouter(

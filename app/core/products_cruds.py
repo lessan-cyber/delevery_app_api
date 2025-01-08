@@ -7,7 +7,8 @@ from fastapi import HTTPException, status
 from app.db.minio import upload_file, delete_file
 from ..config import settings as s
 from ..utils import log
-from app.utils.utils import get_utc_now
+from app.utils.utils import get_utc_now 
+from app.utils.currency_exchange import supported_currencies as list_of_supported_currencies
 async def create_new_product(db: Session, product_in: ProductCreate):
     # Create the product instance
     product = Product(
@@ -19,7 +20,7 @@ async def create_new_product(db: Session, product_in: ProductCreate):
         currency = product_in.currency
     )
     # check if the currency is supported
-    list_of_supported_currencies = ["Us Dollar" , "Franc CFA", "Euro" , "Naira" , "Rouble"  ,"Yuan", "Yen"  , "Pound Sterling" , "Rand" , "Rupee" , "Real" , "Peso" , "Dinar" , "Dirham" , "Krone" , "Krona" , "Forint" , "Kuna" , "Koruna" , "Lira" , "Leu" , "Lek" , "Lira" , "Marka" , "Pataca" , "Peso" , "Pula" , "Rial" , "Riyal" , "Rufiyaa" , "Rupiah" , "Shekel" , "Taka" , "Tenge" , "Tugrik" , "Won" , "Zloty" , "Baht"]
+   
     if product_in.currency not in list_of_supported_currencies:
         raise HTTPException(status_code=400, detail="The currency is not supported")
     db.add(product)
@@ -93,7 +94,7 @@ async def updateProduct(db: Session, product_id: int, product_update: ProductUpd
         product.stock = product_update.stock
     if product_update.currency is not None:
         # Check if the currency is supported
-        list_of_supported_currencies = ["Us Dollar", "Franc CFA", "Euro", "Naira", "Rouble", "Yuan", "Yen", "Pound Sterling", "Rand", "Rupee", "Real", "Peso", "Dinar", "Dirham", "Krone", "Krona", "Forint", "Kuna", "Koruna", "Lira", "Leu", "Lek", "Lira", "Marka", "Pataca", "Peso", "Pula", "Rial", "Riyal", "Rufiyaa", "Rupiah", "Shekel", "Taka", "Tenge", "Tugrik", "Won", "Zloty", "Baht"]
+     
         if product_update.currency not in list_of_supported_currencies:
             raise HTTPException(status_code=400, detail="The currency is not supported")
         product.currency = product_update.currency

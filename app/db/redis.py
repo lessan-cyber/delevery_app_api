@@ -37,6 +37,7 @@ async def get_access_token(user_id: int, type: str):
         return None
 
 async def delete_access_token(user_id:int, type: str):
+
     try:
         is_token_deleted = await redis_client.delete(f"{type}:{user_id}")
         if is_token_deleted:
@@ -45,3 +46,11 @@ async def delete_access_token(user_id:int, type: str):
             log.info(f"{type} for user {user_id} not found")
     except Exception as e:
         log.info(f"Failed to delete {type}: {e}")
+
+async def store_exchange_rate(exchange):
+    pass
+    try:
+        await redis_client.set("exchange_rate", exchange)
+        log.info("Exchange rate stored successfully")
+    except Exception as e:
+        log.info(f"Failed to store exchange rate: {e}")
