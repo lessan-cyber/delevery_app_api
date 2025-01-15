@@ -21,7 +21,9 @@ class Settings(BaseSettings):
     minio_bucket: str
     minio_url: str
     exchange_api_id:str
-
+    geoip_api_host:str
+    geoip_api_port:str
+    fake_ip: str
 
 settings = Settings()
 

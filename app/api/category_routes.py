@@ -37,3 +37,5 @@ async def update_category_route(category_id: int, category_update: CategoryUpdat
     
     return updated_category
 
+
+

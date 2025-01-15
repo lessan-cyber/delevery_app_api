@@ -3,7 +3,7 @@ import logging
 from sqlalchemy import inspect
 from fastapi import FastAPI
 from app.api import customer_routes, driver_routes, company_routes, user_routes, category_routes, product_routes, discount_routes
-from app.db import test_redis_connection
+from app.db import test_redis_connection , load_country_currency_into_redis
 from app.db.minio import verify_minio_connection
 from contextlib import asynccontextmanager
 from app.utils.currency_exchange import get_exchange_rates
@@ -28,8 +28,10 @@ def init_db():
 async def lifespan(app: FastAPI) :
     await test_redis_connection()
     await verify_minio_connection()
+    await load_country_currency_into_redis()
     await get_exchange_job()
     yield
+
 
 
     
@@ -52,5 +54,8 @@ init_db()
 
 @repeat_every(seconds=3600) # one hour 
 async def get_exchange_job():
-    print("hooooooo")
-    await get_exchange_rates()
+    #await get_exchange_rates()
+    print("we are good")
+
+# TODO  set up geoip2  api
+# TODO  get it running for ip converting 

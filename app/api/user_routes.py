@@ -12,6 +12,8 @@ from jose import JWTError , jwt
 from ..config import settings as s
 from ..utils import log
 from ..db.minio import upload_file
+from fastapi import Request
+from ..utils.geolocaton import get_user_currency
 router = APIRouter(
     prefix="/users",
     tags=['users']
@@ -90,5 +92,10 @@ async def revoke_token(access_token: str, db: Session = Depends(get_db), current
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
     
 @router.get("/test")
-async def test_route():
+async def test_route(request: Request):
+    geo = await get_user_currency(request.headers.get('host'))
+    print(request.headers.get('host'))
+    print(geo)
     return {"message": "Test route works!"}
+
+

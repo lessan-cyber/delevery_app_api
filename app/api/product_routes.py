@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, Form, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, Form, File , Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.schemas.product_schema import ProductCreate, ProductResponse, ProductUpdate, ProductWithDiscount
@@ -134,7 +134,9 @@ async def delete_product_route(
 
 @router.get("/{product_id}", response_model=ProductWithDiscount)
 async def get_product_with_discounts(
+    request: Request,
     product_id: int,
     db: Session = Depends(get_db)
 ):
+    print(request.client.host)
     return await get_product_with_discounts_crud(db, product_id)

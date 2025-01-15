@@ -37,7 +37,6 @@ services:
     image: postgres
     env_file:
       - .env
-    restart: always
     user: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -113,7 +112,13 @@ services:
       - minio
     networks:
       - app-network
-
+  geoip-api:
+    image: ghcr.io/observabilitystack/geoip-api:latest
+    container_name: geoip-api
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
 volumes:
   db-data:
   redis_data:
@@ -122,5 +127,6 @@ volumes:
 networks:
   app-network:
     driver: bridge
+
 
 

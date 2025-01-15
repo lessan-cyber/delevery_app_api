@@ -1,6 +1,7 @@
-import requests
+import requests , json
 from app.config import settings
 from app.db.redis import store_exchange_rate
+
 curenncies_exchange_api = {
   "AED": "United Arab Emirates Dirham",
   "AFN": "Afghan Afghani",
@@ -176,7 +177,6 @@ curenncies_exchange_api = {
 supported_currencies = [ "XOF","XAF0", "USD", "EUR", "AED", "RUB"]
 
 
-
 async def get_exchange_rates():
     api_id =  settings.exchange_api_id
     url = f"https://openexchangerates.org/api/latest.json?app_id={api_id}"
@@ -186,11 +186,11 @@ async def get_exchange_rates():
         data = response.json()
         rates = data.get("rates", {})
         filtered_rates = {currency: rate for currency, rate in rates.items() if currency in supported_currencies}
-        print(filtered_rates)
-        store_exchange_rate(exchange=filtered_rates)
-        print(filtered_rates)
+        await store_exchange_rate(exchange= json.dumps(filtered_rates))
         return filtered_rates
     else:
         response.raise_for_status()
 
 
+async def convert_price(price: float, currency: str) -> str :
+    pass 

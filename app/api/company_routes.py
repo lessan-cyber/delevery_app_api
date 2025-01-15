@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.company_cruds import create_company, update_company, delete_company
 from app.schemas import UserCreate, CompanyProfileCreate, CompanyResponse, UserUpdate, CompanyProfileUpdate
-from app.db import get_db, delete_access_token
+from app.db import get_db
 from app.models.user_models import CompanyProfile, User
 from app.utils import validate_user, get_user_response, log, validate_company_inputs_on_update
 from ..core.auth import get_current_user

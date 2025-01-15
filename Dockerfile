@@ -19,7 +19,7 @@ RUN  pip install --upgrade pip
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
-
+RUN apk add curl
 COPY --chown=appuser:appuser . .
 
 RUN mkdir -p /app/alembic/versions && \
