@@ -1,83 +1,99 @@
-name: Test FastAPI Application with Docker
+name: CI
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready }" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install Docker Compose
-      run: |
-        sudo apt update
-        sudo apt install curl
-        # Add Docker's official GPG key:
-        sudo apt-get update
-        sudo apt-get install ca-certificates curl
-        sudo install -m 0755 -d /etc/apt/keyrings
-        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-        sudo chmod a+r /etc/apt/keyrings/docker.asc
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
 
-        # Add the repository to Apt sources:
-        echo \
-          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-          $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt-get update
-        sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-        - name: Create .env file
+      - name: Install dependencies
         run: |
-          touch .env
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Set up Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl
+          sudo install -m 0755 -d /etc/apt/keyrings
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          sudo chmod a+r /etc/apt/keyrings/docker.asc
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      - name: Create .env file
+        run: |
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
-          echo "JWT_SECRET_KEY=${{ secrets.REDIS_HOST }}" >> .env
+          echo "POSTGRES_HOST=localhost" >> .env
+          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
           echo "JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}" >> .env
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
-          echo "ACCESS_TOKEN_EXPIRATIONT=${{ secrets.ACCESS_TOKEN_EXPIRATION }}" >> .env
-          echo "REFRESH_TOKEN_EXPIRATIONT=${{ secrets.REFRESH_TOKEN_EXPIRATION }}" >> .env
+          echo "ACCESS_TOKEN_EXPIRATION=${{ secrets.ACCESS_TOKEN_EXPIRATION }}" >> .env
+          echo "REFRESH_TOKEN_EXPIRATION=${{ secrets.REFRESH_TOKEN_EXPIRATION }}" >> .env
           echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
           echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
           echo "MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }}" >> .env
           echo "MINIO_PORT=${{ secrets.MINIO_PORT }}" >> .env
           echo "MINIO_USE_SSL=${{ secrets.MINIO_USE_SSL }}" >> .env
           echo "MINIO_BUCKET=${{ secrets.MINIO_BUCKET }}" >> .env
-          echo "MINIO_URL=${{ secrets.MINIO_URL}}" >> .env
+          echo "MINIO_URL=${{ secrets.MINIO_URL }}" >> .env
           echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
-          echo "GEOIP_API_HOST=${{ secrets.GEOIP_API_HOST}}" >> .env
+          echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
+          echo "GEOIP_API_HOST=${{ secrets.GEOIP_API_HOST }}" >> .env
           echo "GEOIP_API_PORT=${{ secrets.GEOIP_API_PORT }}" >> .env
           echo "EXCHANGE_API_ID=${{ secrets.EXCHANGE_API_ID }}" >> .env
-          echo "GEOIPUPDATE_ACCOUNT_ID=${{ secrets.GEOIPUPDATE_ACCOUNT_ID }}" >> .env
-          echo "GEOIPUPDATE_LICENSE_KEY=${{ secrets.GEOIPUPDATE_LICENSE_KEY }}" >> .env
-          echo "GEOIPUPDATE_EDITION_IDS=${{ secrets.GEOIPUPDATE_EDITION_IDS }}" >> .env
-          echo "GEOIPUPDATE_FREQUENCY=${{ secrets.GEOIPUPDATE_FREQUENCY }}" >> .env
-          echo "FAKE_IP=${{ secrets.FAKE_IP }}" >> .env
 
-    - name: Build and start the Docker containers
-      run: sudo docker compose up --build -d
+      - name: Build and start the Docker containers
+        run: sudo docker compose up --build -d
 
-    - name: Wait for the application to start
-      run: |
-        for i in {1..10}; do
-          curl -fs http://localhost:8000/healthcheck && break
-          echo "Waiting for the application..."
-          sleep 5
-        done
-        if ! curl -fs http://localhost:8000/healthcheck; then
-          echo "Application did not start in time."
-          exit 1
-        fi
+      - name: Wait for the application to start
+        run: |
+          for i in {1..10}; do
+            curl -fs http://localhost:8000/healthcheck && break
+            echo "Waiting for the application..."
+            sleep 5
+          done
+          if ! curl -fs http://localhost:8000/healthcheck; then
+            echo "Application did not start in time."
+            exit 1
+          fi
 
-    - name: Tear down Docker containers
-      if: always()
-      run: sudo  docker compose down
+
+
+      - name: Tear down Docker containers
+        if: always()
+        run: sudo docker compose down
