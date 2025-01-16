@@ -14,11 +14,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
-
     - name: Install Docker Compose
       run: |
         sudo apt update
@@ -40,14 +35,32 @@ jobs:
 
         - name: Create .env file
         run: |
-          echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
-          echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
-          echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
-          echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-  
+          echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
+          echo "JWT_SECRET_KEY=${{ secrets.REDIS_HOST }}" >> .env
+          echo "JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}" >> .env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+          echo "ACCESS_TOKEN_EXPIRATIONT=${{ secrets.ACCESS_TOKEN_EXPIRATION }}" >> .env
+          echo "REFRESH_TOKEN_EXPIRATIONT=${{ secrets.REFRESH_TOKEN_EXPIRATION }}" >> .env
+          echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
+          echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
+          echo "MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }}" >> .env
+          echo "MINIO_PORT=${{ secrets.MINIO_PORT }}" >> .env
+          echo "MINIO_USE_SSL=${{ secrets.MINIO_USE_SSL }}" >> .env
+          echo "MINIO_BUCKET=${{ secrets.MINIO_BUCKET }}" >> .env
+          echo "MINIO_URL=${{ secrets.MINIO_URL}}" >> .env
+          echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
+          echo "GEOIP_API_HOST=${{ secrets.GEOIP_API_HOST}}" >> .env
+          echo "GEOIP_API_PORT=${{ secrets.GEOIP_API_PORT }}" >> .env
+          echo "EXCHANGE_API_ID=${{ secrets.EXCHANGE_API_ID }}" >> .env
+          echo "GEOIPUPDATE_ACCOUNT_ID=${{ secrets.GEOIPUPDATE_ACCOUNT_ID }}" >> .env
+          echo "GEOIPUPDATE_LICENSE_KEY=${{ secrets.GEOIPUPDATE_LICENSE_KEY }}" >> .env
+          echo "GEOIPUPDATE_EDITION_IDS=${{ secrets.GEOIPUPDATE_EDITION_IDS }}" >> .env
+          echo "GEOIPUPDATE_FREQUENCY=${{ secrets.GEOIPUPDATE_FREQUENCY }}" >> .env
+          echo "FAKE_IP=${{ secrets.FAKE_IP }}" >> .env
     - name: Build and start the Docker containers
       run: sudo docker compose up --build -d
 
