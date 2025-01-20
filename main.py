@@ -38,9 +38,10 @@ async def lifespan(app: FastAPI) :
 app = FastAPI(debug=True, 
               lifespan=lifespan)
 
-@app.get("/")
+@app.get("/healthcheck")
 def read_root():
-    return {"Hello": "World"}
+    return {"Hello": "World",
+            "status" : "200"}
 
 app.include_router(customer_routes.router)
 app.include_router(driver_routes.router)
