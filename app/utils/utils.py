@@ -9,7 +9,8 @@ def get_user_response(user):
         full_name=user.full_name,
         phone_number=user.phone_number,  
         is_active=user.is_active,
-        created_at=user.created_at
+        created_at=user.created_at,
+        preferred_currency=user.preferred_currency
     )
 
 def configure_logging():

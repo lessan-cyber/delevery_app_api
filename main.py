@@ -38,10 +38,9 @@ async def lifespan(app: FastAPI) :
 app = FastAPI(debug=True, 
               lifespan=lifespan)
 
-@app.get("/healthcheck")
-def read_root():
-    return {"Hello": "World",
-            "status" : "200"}
+@app.get("/health")
+async def health_check():
+        return {"status": "healthy"}
 
 app.include_router(customer_routes.router)
 app.include_router(driver_routes.router)
@@ -55,7 +54,7 @@ init_db()
 
 @repeat_every(seconds=3600) # one hour 
 async def get_exchange_job():
-    #await get_exchange_rates()
+    await get_exchange_rates()
     print("we are good")
 
 # TODO  set up geoip2  api

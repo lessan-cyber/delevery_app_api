@@ -4,6 +4,7 @@ from app.schemas import UserCreate, CustomerProfileCreate
 from app.utils import hash_password
 from datetime import datetime  
 from ..db.redis import delete_access_token
+from ..utils.currency_exchange import supported_currencies
 
 async def create_customer(db: Session, user_in: UserCreate, customer_profile_in: CustomerProfileCreate):
     customer = User(
@@ -17,12 +18,16 @@ async def create_customer(db: Session, user_in: UserCreate, customer_profile_in:
     db.commit()
     db.refresh(customer)
 
+    if customer_profile_in.preferred_currency not in supported_currencies:
+        customer_profile_in.preferred_currency = 'USD'
+        #raise ValueError("Preferred currency is not supported ")
     
     customer_profile = CustomerProfile(
         user_id=customer.id,
         default_address=customer_profile_in.default_address,
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
+        preferred_currency=customer_profile_in.preferred_currency
     )
     db.add(customer_profile)
     db.commit()
@@ -59,3 +64,5 @@ async def delete_customer(db: Session, customer, profile):
     db.delete(customer)
     db.delete(profile)
     db.commit()
+
+    

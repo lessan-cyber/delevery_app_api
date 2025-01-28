@@ -174,7 +174,7 @@ curenncies_exchange_api = {
   "ZMW": "Zambian Kwacha",
   "ZWL": "Zimbabwean Dollar"
 }
-supported_currencies = [ "XOF","XAF0", "USD", "EUR", "AED", "RUB"]
+supported_currencies = [ "XOF","XAF", "USD", "EUR", "AED", "RUB"]
 
 
 async def get_exchange_rates():
