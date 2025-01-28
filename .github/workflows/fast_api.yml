@@ -30,7 +30,7 @@ jobs:
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update
           sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-          echo " this is ${{secrets.POSTGRES_USER}}"
+
       - name: Create .env file
         run: |
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
@@ -59,20 +59,37 @@ jobs:
       - name: Build and start the Docker containers
         run: sudo docker compose up --build -d
 
+      - name: Retrieve application logs while waiting
+        run: |
+          for i in {1..20}; do
+            echo "Waiting for application to start... (Attempt $i)"
+            sudo docker logs fastapi_app 2>&1 | tail -n 20  # Adjust 'fastapi_app' with your service name
+            sleep 3
+          done
+
+      - name: Check Docker container status
+        run: |
+          echo "Current Docker containers:"
+          sudo docker ps
+          echo "Port 8000 status:"
+          sudo netstat -tuln | grep 8000
+
       - name: Wait for the application to start
         run: |
-          for i in {1..10}; do
-            if curl -fs http://localhost:8000/health; then
+          for i in {1..20}; do  # Increased to 20 attempts with 5-second intervals
+            echo "Attempting to connect to http://localhost:8000/health..."
+            if curl -fs http://localhost:8000/health > /dev/null; then
               echo "Application is up and running."
-              exit 0
+              break
             fi
-            echo "Waiting for the application..."
+            echo "Waiting for application... (Attempt $i)"
             sleep 5
           done
-          if ! curl -fs http://localhost:8000/health; then
+          if ! curl -fs http://localhost:8000/health > /dev/null; then
             echo "Application did not start in time."
             exit 1
           fi
+
       - name: Tear down Docker containers
         if: always()
         run: sudo docker compose down
