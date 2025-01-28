@@ -63,7 +63,7 @@ jobs:
         run: |
           for i in {1..20}; do
             echo "Waiting for application to start... (Attempt $i)"
-            sudo docker logs fastapi_app 2>&1 | tail -n 20  # Adjust 'fastapi_app' with your service name
+            sudo docker logs delevery_app_api-api-1 2>&1 | tail -n 20  # Adjust 'fastapi_app' with your service name
             sleep 3
           done
 
