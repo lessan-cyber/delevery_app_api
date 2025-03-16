@@ -7,27 +7,25 @@ from ..db.redis import delete_access_token
 from ..utils.currency_exchange import supported_currencies
 
 async def create_customer(db: Session, user_in: UserCreate, customer_profile_in: CustomerProfileCreate):
+    # Create the user first with preferred currency
     customer = User(
         **user_in.model_dump(exclude_unset=True, exclude={"password"}),
         hashed_password=hash_password(user_in.password),
         role="customer",
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
+        preferred_currency=customer_profile_in.preferred_currency or "USD"  # Set preferred currency here
     )
     db.add(customer)
     db.commit()
     db.refresh(customer)
-
-    if customer_profile_in.preferred_currency not in supported_currencies:
-        customer_profile_in.preferred_currency = 'USD'
-        #raise ValueError("Preferred currency is not supported ")
     
+    # Create customer profile without preferred_currency
     customer_profile = CustomerProfile(
         user_id=customer.id,
         default_address=customer_profile_in.default_address,
         created_at=datetime.now(),
-        updated_at=datetime.now(),
-        preferred_currency=customer_profile_in.preferred_currency
+        updated_at=datetime.now()
     )
     db.add(customer_profile)
     db.commit()

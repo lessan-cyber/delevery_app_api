@@ -16,9 +16,8 @@ async def get_user_currency(ip:str)  :
     else:
         return response.raise_for_status()
 
+
 # TODO  recupérer le country code
-# TODO  recupérer le exchange stocké  dans redis 
-# TODO  recupérer recupéré  la monaie de l' utilsation basé sur son country code 
+# TODO  recupérer le exchange stocké  dans redis
+# TODO  recupérer recupéré  la monaie de l' utilsation basé sur son country code
 # TODO  vérifier si la monaie est supporter  si oui rretourner la monaie sinon retourner le dollar
-
-

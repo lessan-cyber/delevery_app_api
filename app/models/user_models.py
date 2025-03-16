@@ -28,6 +28,7 @@ class User(Base):
     customer_profile = relationship("CustomerProfile", uselist=False, back_populates="user")
     driver_profile = relationship("DriverProfile", uselist=False, back_populates="user")
     company_profile = relationship("CompanyProfile", uselist=False, back_populates="user")
+    preferred_currency = Column(String(10), nullable=False, default="USD")
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
@@ -40,7 +41,6 @@ class CustomerProfile(Base):
     default_address = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    preferred_currency = Column(String(3), nullable=False, default="USD")
 
     user = relationship("User", back_populates="customer_profile")
 
@@ -52,7 +52,6 @@ class DriverProfile(Base):
     is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(),nullable=True)
-    preferred_currency = Column(String(3), nullable=True)
 
     user = relationship("User", back_populates="driver_profile")
 
@@ -65,6 +64,5 @@ class CompanyProfile(Base):
     address = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
-    preferred_currency = Column(String(3), nullable=False, default="USD")
     user = relationship("User", back_populates="company_profile")
     

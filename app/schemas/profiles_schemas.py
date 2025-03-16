@@ -5,7 +5,7 @@ from .users_schemas import User, UserResponse
 
 class CustomerProfileBase(BaseModel):
     default_address: Optional[str] = None
-    preferred_currency: Optional[str] = None
+    preferred_currency: Optional[str] = None  # Keep this to receive the value, but it will be set on User
 
 class CustomerProfileCreate(CustomerProfileBase):
     pass
@@ -94,3 +94,7 @@ class CompanyProfile(CompanyProfileInDB):
 
     class Config:
         from_attributes = True 
+
+
+
+        

@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     phone_number: str
     full_name: Optional[str] = None
     is_active: bool = True
+    preferred_currency: str = "USD"
     
 
 class UserCreate(UserBase):
@@ -39,6 +40,7 @@ class UserResponse(BaseModel):
     phone_number: str
     is_active: bool
     created_at: datetime
+    preferred_currency: Optional[str] = None
 
     class Config:
         from_attributes = True
