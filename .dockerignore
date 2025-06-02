@@ -34,3 +34,5 @@ LICENSE
 README.md
 docker_postgres.session.sql
 minio_init_sh
+env/
+alembic/

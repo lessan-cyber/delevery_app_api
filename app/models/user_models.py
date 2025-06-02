@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Table, ForeignKey, Text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Table,
+    ForeignKey,
+    Text,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.database import Base
@@ -9,6 +18,7 @@ from app.db.database import Base
     Column("role_id", Integer, ForeignKey("roles.id"), primary_key=True),
     Column("permission_id", Integer, ForeignKey("permissions.id"), primary_key=True)
 )"""
+
 
 class User(Base):
     __tablename__ = "users"
@@ -22,17 +32,20 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
-    #role_id = Column(Integer, ForeignKey("roles.id"))
-    #role = relationship("Role", back_populates="users")
+    # role_id = Column(Integer, ForeignKey("roles.id"))
+    # role = relationship("Role", back_populates="users")
     role = Column(String(50), nullable=False)
-    customer_profile = relationship("CustomerProfile", uselist=False, back_populates="user")
+    customer_profile = relationship(
+        "CustomerProfile", uselist=False, back_populates="user"
+    )
     driver_profile = relationship("DriverProfile", uselist=False, back_populates="user")
-    company_profile = relationship("CompanyProfile", uselist=False, back_populates="user")
+    company_profile = relationship(
+        "CompanyProfile", uselist=False, back_populates="user"
+    )
     preferred_currency = Column(String(10), nullable=False, default="USD")
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
-
 
 
 class CustomerProfile(Base):
@@ -44,6 +57,7 @@ class CustomerProfile(Base):
 
     user = relationship("User", back_populates="customer_profile")
 
+
 class DriverProfile(Base):
     __tablename__ = "driver_profiles"
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
@@ -51,18 +65,18 @@ class DriverProfile(Base):
     vehicle_type = Column(String(50), nullable=False, index=True)
     is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(),nullable=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
     user = relationship("User", back_populates="driver_profile")
+
 
 class CompanyProfile(Base):
     __tablename__ = "company_profiles"
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     company_name = Column(String(100), nullable=False, unique=True)
     business_type = Column(String(50))
-    company_id = Column(String(50), unique=True, index=True)  
+    company_id = Column(String(50), unique=True, index=True)
     address = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     user = relationship("User", back_populates="company_profile")
-    

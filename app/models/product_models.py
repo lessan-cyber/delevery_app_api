@@ -25,7 +25,10 @@ class Category(Base):
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
 
     products = relationship(
-        "Product", secondary="product_categories", back_populates="categories"
+        "Product",
+        secondary="product_categories",
+        back_populates="categories",
+        overlaps="product_categories,product",
     )
 
     def __repr__(self):
@@ -53,8 +56,15 @@ class Discount(Base):
     start_date = Column(TIMESTAMP(timezone=True), nullable=False)
     end_date = Column(TIMESTAMP(timezone=True), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     product = relationship("Product", back_populates="discounts")
 
@@ -79,12 +89,18 @@ class Product(Base):
     )
 
     categories = relationship(
-        "Category", secondary="product_categories", back_populates="products"
+        "Category",
+        secondary="product_categories",
+        back_populates="products",
+        overlaps="product_categories,product",
     )
     images = relationship(
         "ProductImage", back_populates="product", cascade="all, delete"
     )
-    product_categories = relationship("ProductCategory", back_populates="product")
+
+    product_categories = relationship(
+        "ProductCategory", back_populates="product", overlaps="categories,products"
+    )
     discounts = relationship(
         "Discount", back_populates="product", cascade="all, delete"
     )
@@ -99,5 +115,7 @@ class ProductCategory(Base):
     product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
     category_id = Column(Integer, ForeignKey("categories.id"), primary_key=True)
 
-    product = relationship("Product", back_populates="product_categories")
-    category = relationship("Category")
+    product = relationship(
+        "Product", back_populates="product_categories", overlaps="categories,products"
+    )
+    category = relationship("Category", overlaps="products,categories")

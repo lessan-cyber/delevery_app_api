@@ -1,33 +1,23 @@
-FROM python:3.13.0-alpine
+FROM python:3.13-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
-RUN  pip install --upgrade pip
-COPY requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements.txt
-RUN apk add curl
-COPY --chown=appuser:appuser . .
 
-RUN mkdir -p /app/alembic/versions && \
-    chown -R appuser:appuser /app && \
-    chmod -R 755 /app && \
-    chmod 775 /app/alembic/versions
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
 
-USER appuser
+COPY requirements.txt  .
+
+
+RUN uv pip install -r requirements.txt --system
+
+COPY . .
 
 EXPOSE 8000
 

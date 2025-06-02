@@ -6,3 +6,6 @@ docker_postgres.session.sql
 minio_init_sh
 collection/
 env
+.idea
+.pytest_cache/
+.ropeproject/
