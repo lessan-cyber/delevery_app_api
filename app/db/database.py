@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 import time
 from app.config import settings
 import logging
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 
 logging.basicConfig(level=logging.INFO)
@@ -23,8 +23,13 @@ engine = create_async_engine(
 )
 Base = declarative_base()
 
-SessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+# Use async_sessionmaker instead of sessionmaker
+SessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
 )
 
 
@@ -37,11 +42,11 @@ async def init_db():
 
 
 async def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        await db.close()
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
 
 
 def test_database_connection():

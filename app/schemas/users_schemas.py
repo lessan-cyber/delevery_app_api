@@ -2,6 +2,8 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from .base import TimestampModel
 from datetime import datetime
+
+
 class UserBase(BaseModel):
     username: str
     email: EmailStr
@@ -9,10 +11,11 @@ class UserBase(BaseModel):
     full_name: Optional[str] = None
     is_active: bool = True
     preferred_currency: str = "USD"
-    
+
 
 class UserCreate(UserBase):
     password: str
+
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
@@ -20,17 +23,20 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     full_name: Optional[str] = None
     is_active: Optional[bool] = None
-    
+
 
 class UserInDBBase(UserBase, TimestampModel):
     id: int
     role_id: Optional[int] = None
 
+
 class UserInDB(UserInDBBase):
     hashed_password: str
 
+
 class User(UserInDBBase):
     pass
+
 
 class UserResponse(BaseModel):
     id: int
@@ -44,5 +50,3 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-

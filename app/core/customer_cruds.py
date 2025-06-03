@@ -6,6 +6,9 @@ from app.utils import hash_password
 from datetime import datetime
 from ..db.redis import delete_access_token
 from ..utils.currency_exchange import supported_currencies
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from fastapi import HTTPException
 
 
 async def create_customer(
@@ -13,12 +16,12 @@ async def create_customer(
 ):
     # Create the user first with preferred currency
     customer = User(
-        **user_in.model_dump(exclude_unset=True, exclude={"password"}),
+        **user_in.model_dump(exclude_unset=True, exclude={"password", "preferred_currency"}),
         hashed_password=hash_password(user_in.password),
         role="customer",
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        preferred_currency=customer_profile_in.preferred_currency or "USD",
+        preferred_currency=user_in.preferred_currency or "USD"
     )
     db.add(customer)
     await db.commit()
@@ -34,17 +37,25 @@ async def create_customer(
     db.add(customer_profile)
     await db.commit()
     await db.refresh(customer_profile)
-    return customer
+
+    # Eagerly load user with profile for safe async access
+    user_with_profile = await get_user_with_profile(db, customer.id)
+    return user_with_profile, customer_profile
 
 
 async def update_customer(
     db: AsyncSession, user_id: int, user_update, customer_profile_update
 ):
-    # Récupérer l'utilisateur existant
-    result = await db.execute(select(User).where(User.id == user_id))
+    # Get the existing user
+    result = await db.execute(
+        select(User).options(selectinload(User.customer_profile)).where(User.id == user_id)
+    )
     existing_user = result.scalar_one_or_none()
+    
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # Mettre à jour l'utilisateur
+    # Update the user
     user_update_dict = (
         user_update.dict(exclude_unset=True)
         if hasattr(user_update, "dict")
@@ -54,13 +65,16 @@ async def update_customer(
         setattr(existing_user, key, value)
     existing_user.updated_at = datetime.now()
 
-    # Récupérer le profil client existant
+    # Get the existing profile
     result_profile = await db.execute(
         select(CustomerProfile).where(CustomerProfile.user_id == user_id)
     )
     existing_profile = result_profile.scalar_one_or_none()
 
-    # Mettre à jour le profil client
+    if not existing_profile:
+        raise HTTPException(status_code=404, detail="Customer profile not found")
+
+    # Update the customer profile
     profile_update_dict = (
         customer_profile_update.dict(exclude_unset=True)
         if hasattr(customer_profile_update, "dict")
@@ -73,7 +87,10 @@ async def update_customer(
     await db.commit()
     await db.refresh(existing_user)
     await db.refresh(existing_profile)
-    return existing_user
+    
+    # Eagerly reload user with profile for safe async access
+    user_with_profile = await get_user_with_profile(db, user_id)
+    return user_with_profile
 
 
 async def delete_customer(db: AsyncSession, customer, profile):
@@ -82,3 +99,13 @@ async def delete_customer(db: AsyncSession, customer, profile):
     await db.delete(customer)
     await db.delete(profile)
     await db.commit()
+
+
+async def get_user_with_profile(db: AsyncSession, some_id: int):
+    result = await db.execute(
+        select(User)
+        .options(selectinload(User.customer_profile))
+        .where(User.id == some_id)
+    )
+    user = result.scalar_one_or_none()
+    return user

@@ -1,0 +1,22 @@
+meta {
+  name: create jwt token
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8000/users/token?username=luas&password=string1234
+  body: json
+  auth: inherit
+}
+
+params:query {
+  username: luas
+  password: string1234
+}
+
+body:json {
+  {
+    "username":"luas"
+  }
+}

@@ -23,29 +23,28 @@ async def test_redis_connection():
             log.info(f"Failed to connect to redis: {e}")
             time.sleep(5)
             
-async def store_access_token(user_id: int , token: str, expiration: int, type: str):
+async def store_access_token(token_id: str, token: str, expiration: int, type: str = "access_token"):
     try:
-        await redis_client.set(f"{type}:{user_id}", token, ex=expiration)
-        log.info(f"{type} for user {user_id} stored successfully")
+        await redis_client.set(f"{type}:{token_id}", token, ex=expiration)
+        log.info(f"{type} with ID {token_id} stored successfully")
     except Exception as e:
         log.info(f"Failed to store {type}: {e}")
 
-async def get_access_token(user_id: int, type: str):
+async def get_access_token(token_id: str, type: str = "access_token"):
     try:
-        token = await redis_client.get(f"{type}:{user_id}")
+        token = await redis_client.get(f"{type}:{token_id}")
         return token
     except Exception as e:
         log.info(f"Failed to retrieve {type}: {e}")
         return None
 
-async def delete_access_token(user_id:int, type: str):
-
+async def delete_access_token(token_id: str, type: str = "access_token"):
     try:
-        is_token_deleted = await redis_client.delete(f"{type}:{user_id}")
+        is_token_deleted = await redis_client.delete(f"{type}:{token_id}")
         if is_token_deleted:
-            log.info(f"{type} for user {user_id} deleted successfully")
+            log.info(f"{type} with ID {token_id} deleted successfully")
         else:
-            log.info(f"{type} for user {user_id} not found")
+            log.info(f"{type} with ID {token_id} not found")
     except Exception as e:
         log.info(f"Failed to delete {type}: {e}")
 

@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.user_models import User, DriverProfile, CustomerProfile, CompanyProfile
 from sqlalchemy import or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -51,13 +52,16 @@ async def validate_user(db, user_in):
             )
 
 
-def validate_driver(db, driver_in, user_in):
-    validate_user(db, user_in)
-    new_profile = (
-        db.query(DriverProfile)
-        .filter(DriverProfile.license_number == driver_in.license_number)
-        .first()
+async def validate_driver(db, driver_in, user_in):
+    await validate_user(db, user_in)
+
+    result = await db.execute(
+        select(DriverProfile).filter(
+            DriverProfile.license_number == driver_in.license_number
+        )
     )
+    new_profile = result.scalar_one_or_none()
+
     if new_profile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -65,20 +69,31 @@ def validate_driver(db, driver_in, user_in):
         )
 
 
-def validate_user_inputs_on_update(db: Session, user_id: int, user_update):
+async def validate_user_inputs_on_update(db: AsyncSession, user_id: int, user_update):
     user_update_dict = user_update.dict(exclude_unset=True)
-    existing_user = (
-        db.query(User)
-        .filter(
-            User.id != user_id,
-            (User.username == user_update_dict.get("username"))
-            | (User.email == user_update_dict.get("email"))
-            | (User.phone_number == user_update_dict.get("phone_number")),
-        )
-        .first()
-    )
+    print(f"Validating update for user {user_id}")
+    print(f"Update data: {user_update_dict}")
+    
+    filters = []
+    if user_update_dict.get("username"):
+        filters.append(User.username == user_update_dict["username"])
+    if user_update_dict.get("email"):
+        filters.append(User.email == user_update_dict["email"])
+    if user_update_dict.get("phone_number"):
+        filters.append(User.phone_number == user_update_dict["phone_number"])
+    if not filters:
+        print("No fields to validate")
+        return  # Nothing to check
+        
+    from sqlalchemy import or_, and_, select
 
+    stmt = select(User).where(User.id != user_id, or_(*filters))
+    print(f"SQL Query: {stmt}")
+    result = await db.execute(stmt)
+    existing_user = result.scalar_one_or_none()
+    
     if existing_user:
+        print(f"Found existing user: {existing_user.id}, {existing_user.username}, {existing_user.email}, {existing_user.phone_number}")
         if existing_user.username == user_update_dict.get("username"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken"
@@ -92,23 +107,23 @@ def validate_user_inputs_on_update(db: Session, user_id: int, user_update):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Phone number already exists",
             )
+    else:
+        print("No conflicts found")
 
 
-def validate_driver_inputs_on_update(
-    db: Session, user_id: int, user_update, profile_update
+async def validate_driver_inputs_on_update(
+    db: AsyncSession, user_id: int, user_update, profile_update
 ):
-    validate_user_inputs_on_update(db, user_id, user_update)
+    await validate_user_inputs_on_update(db, user_id, user_update)
 
     profile_update_dict = profile_update.dict(exclude_unset=True)
     if "license_number" in profile_update_dict:
-        existing_profile = (
-            db.query(DriverProfile)
-            .filter(
-                DriverProfile.user_id != user_id,
-                DriverProfile.license_number == profile_update_dict["license_number"],
-            )
-            .first()
+        stmt = select(DriverProfile).filter(
+            DriverProfile.user_id != user_id,
+            DriverProfile.license_number == profile_update_dict["license_number"],
         )
+        result = await db.execute(stmt)
+        existing_profile = result.scalar_one_or_none()
 
         if existing_profile:
             raise HTTPException(
@@ -117,10 +132,10 @@ def validate_driver_inputs_on_update(
             )
 
 
-def validate_company_inputs_on_update(
-    db: Session, user_id: int, user_update, profile_update
+async def validate_company_inputs_on_update(
+    db: AsyncSession, user_id: int, user_update, profile_update
 ):
-    validate_user_inputs_on_update(db, user_id, user_update)
+    await validate_user_inputs_on_update(db, user_id, user_update)
     profile_update_dict = profile_update.dict(exclude_unset=True)
 
     if "company_name" in profile_update_dict or "company_id" in profile_update_dict:
@@ -134,11 +149,11 @@ def validate_company_inputs_on_update(
                 CompanyProfile.company_id == profile_update_dict["company_id"]
             )
 
-        existing_profile = (
-            db.query(CompanyProfile)
-            .filter(CompanyProfile.user_id != user_id, or_(*filters))
-            .first()
+        stmt = select(CompanyProfile).filter(
+            CompanyProfile.user_id != user_id, or_(*filters)
         )
+        result = await db.execute(stmt)
+        existing_profile = result.scalar_one_or_none()
 
         if existing_profile:
             if existing_profile.company_id == profile_update_dict.get("company_id"):

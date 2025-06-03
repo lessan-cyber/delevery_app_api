@@ -3,18 +3,23 @@ from typing import Optional
 from .base import TimestampModel
 from .users_schemas import User, UserResponse
 
+
 class CustomerProfileBase(BaseModel):
     default_address: Optional[str] = None
-    preferred_currency: Optional[str] = None  # Keep this to receive the value, but it will be set on User
+    # preferred_currency: Optional[str] = None  # Keep this to receive the value, but it will be set on User
+
 
 class CustomerProfileCreate(CustomerProfileBase):
     pass
 
+
 class CustomerProfileUpdate(CustomerProfileBase):
     pass
 
+
 class CustomerProfileInDB(CustomerProfileBase, TimestampModel):
     user_id: int
+
 
 class CustomerProfile(CustomerProfileInDB):
     user: User
@@ -22,21 +27,26 @@ class CustomerProfile(CustomerProfileInDB):
     class Config:
         from_attribute = True
 
+
 class CustomerResponse(BaseModel):
     user: UserResponse
     default_address: str
-    preferred_currency: str
+    # preferred_currency: str
+
     class Config:
         from_attributes = True
+
 
 class DriverProfileBase(BaseModel):
     license_number: str
     vehicle_type: str
     is_verified: bool = False
-    preferred_currency: Optional[str] = None    
+    preferred_currency: Optional[str] = None
+
 
 class DriverProfileCreate(DriverProfileBase):
     pass
+
 
 class DriverProfileUpdate(DriverProfileBase):
     license_number: Optional[str] = None
@@ -44,14 +54,17 @@ class DriverProfileUpdate(DriverProfileBase):
     is_verified: Optional[bool] = None
     preferred_currency: Optional[str] = None
 
+
 class DriverProfileInDB(DriverProfileBase, TimestampModel):
     user_id: int
+
 
 class DriverProfile(DriverProfileInDB):
     user: User
 
     class Config:
-       from_attributes = True
+        from_attributes = True
+
 
 class DriverResponse(BaseModel):
     user: UserResponse
@@ -59,25 +72,33 @@ class DriverResponse(BaseModel):
     vehicle_type: str
     is_verified: bool
     preferred_currency: Optional[str] = None
+
     class Config:
         from_attributes = True
+
+
 class CompanyProfileBase(BaseModel):
     company_name: str
     business_type: Optional[str] = None
     company_id: str
     address: str
     preferred_currency: Optional[str] = None
+
+
 class CompanyProfileCreate(CompanyProfileBase):
     pass
+
 
 class CompanyProfileUpdate(CompanyProfileBase):
     company_name: Optional[str] = None
     business_type: Optional[str] = None
     company_id: Optional[str] = None
     address: Optional[str] = None
-    
+
+
 class CompanyProfileInDB(CompanyProfileBase, TimestampModel):
     user_id: int
+
 
 class CompanyResponse(BaseModel):
     user: UserResponse
@@ -86,15 +107,13 @@ class CompanyResponse(BaseModel):
     company_id: Optional[str] = None
     address: str
     preferred_currency: Optional[str] = None
+
     class Config:
         from_attributes = True
+
 
 class CompanyProfile(CompanyProfileInDB):
     user: User
 
     class Config:
-        from_attributes = True 
-
-
-
-        
+        from_attributes = True

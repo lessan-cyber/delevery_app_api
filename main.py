@@ -23,15 +23,17 @@ logging.basicConfig(level=logging.INFO)
 
 async def init_db():
     async with engine.begin() as conn:
-        inspector = await conn.run_sync(inspect)
-        for table_name in Base.metadata.tables.keys():
-            if not await conn.run_sync(
-                lambda sync_conn: inspector.has_table(table_name)
-            ):
-                logging.info(f"Creating table: {table_name}")
-            else:
-                logging.info(f"Table already exists: {table_name}")
-        await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn))
+
+        def check_tables(sync_conn):
+            inspector = inspect(sync_conn)
+            for table_name in Base.metadata.tables.keys():
+                if not inspector.has_table(table_name):
+                    logging.info(f"Creating table: {table_name}")
+                else:
+                    logging.info(f"Table already exists: {table_name}")
+            Base.metadata.create_all(sync_conn)
+
+        await conn.run_sync(check_tables)
     logging.info("Database created successfully!")
 
 
@@ -59,6 +61,7 @@ app.include_router(driver_routes.router)
 app.include_router(company_routes.router)
 app.include_router(product_routes.router)
 app.include_router(discount_routes.router)
+app.include_router(user_routes.router)
 test_database_connection()
 test_database_connection()
 init_db()
@@ -67,8 +70,11 @@ init_db()
 @repeat_every(seconds=3600)  # one hour
 async def get_exchange_job():
     await get_exchange_rates()
-    print("we are good")
+    print("we are good to go")
 
 
 # TODO  set up geoip2  api
 # TODO  get it running for ip converting
+
+
+

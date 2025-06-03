@@ -12,6 +12,8 @@ from app.schemas import (
 from app.db import get_db
 from app.models.user_models import CustomerProfile, User
 from ..utils import validate_user, get_user_response, validate_user_inputs_on_update
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/customers", tags=["Customers"])
 
@@ -20,17 +22,15 @@ router = APIRouter(prefix="/customers", tags=["Customers"])
 async def register_customer(
     user_in: UserCreate,
     customer_profile_in: CustomerProfileCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     await validate_user(db, user_in)
     try:
-        user = await create_customer(db, user_in, customer_profile_in)
-        customer_profile = (
-            db.query(CustomerProfile).filter(CustomerProfile.user_id == user.id).first()
+        user, customer_profile = await create_customer(db, user_in, customer_profile_in)
+        profile_response = (
+            customer_profile.default_address if customer_profile else None
         )
-        profile_response = customer_profile.default_address
-        user_response = get_user_response(user)
-
+        user_response = await get_user_response(user)
         return {"user": user_response, "default_address": profile_response}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -44,49 +44,58 @@ async def register_customer(
 async def update_customer_profile(
     user_update: UserUpdate,
     customer_profile_update: CustomerProfileUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    customer = db.query(User).filter(User.id == current_user.id).first()
-    existing_profile = (
-        db.query(CustomerProfile)
-        .filter(CustomerProfile.user_id == current_user.id)
-        .first()
+    print(f"Updating profile for user ID: {current_user.id}")
+    print(f"Current user data: {current_user.username}, {current_user.email}, {current_user.phone_number}")
+    
+    result_user = await db.execute(select(User).where(User.id == current_user.id))
+    customer = result_user.scalar_one_or_none()
+    result_profile = await db.execute(
+        select(CustomerProfile).where(CustomerProfile.user_id == current_user.id)
     )
+    existing_profile = result_profile.scalar_one_or_none()
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Customer profile not found")
     if not customer:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
         )
-    validate_user_inputs_on_update(db, current_user.id, user_update)
+    await validate_user_inputs_on_update(db, current_user.id, user_update)
     try:
         user = await update_customer(
             db, current_user.id, user_update, customer_profile_update
         )
-        customer_profile = (
-            db.query(CustomerProfile).filter(CustomerProfile.user_id == user.id).first()
+        result_profile = await db.execute(
+            select(CustomerProfile).where(CustomerProfile.user_id == user.id)
         )
-        profile_response = customer_profile.default_address
-        user_response = get_user_response(user)
+        customer_profile = result_profile.scalar_one_or_none()
+        profile_response = (
+            customer_profile.default_address if customer_profile else None
+        )
+        user_response = await get_user_response(user)
 
         return {"user": user_response, "default_address": profile_response}
     except Exception as e:
+        print(f"Error updating customer: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.delete("/delete/{customer_id}", status_code=status.HTTP_200_OK)
 async def delete_customer_profile(
-    db: Session = Depends(get_db), current_user=Depends(get_current_user)
+    db: AsyncSession = Depends(get_db), current_user=Depends(get_current_user)
 ):
-    existing_profile = (
-        db.query(CustomerProfile)
-        .filter(CustomerProfile.user_id == current_user.id)
-        .first()
+    from sqlalchemy import select
+
+    result_profile = await db.execute(
+        select(CustomerProfile).where(CustomerProfile.user_id == current_user.id)
     )
+    existing_profile = result_profile.scalar_one_or_none()
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Customer profile not found")
-    customer = db.query(User).filter(User.id == current_user.id).first()
+    result_user = await db.execute(select(User).where(User.id == current_user.id))
+    customer = result_user.scalar_one_or_none()
     if not customer:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"

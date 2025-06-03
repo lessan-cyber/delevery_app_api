@@ -1,0 +1,30 @@
+meta {
+  name: create user
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8000/customers/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "user_in": {
+      "username": "luas",
+      "email": "luas@example.com",
+      "phone_number": "95784264",
+      "full_name": "lucks luca",
+      "is_active": true,
+      "password": "string1234",
+      "preferred_currency": "USD"
+  
+    },
+    "customer_profile_in": {
+      "default_address": "string"
+  
+    }
+  }
+}
