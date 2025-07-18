@@ -37,11 +37,9 @@ async def create_customer(
     db.add(customer_profile)
     await db.commit()
     await db.refresh(customer_profile)
-
     # Eagerly load user with profile for safe async access
-    user_with_profile = await get_user_with_profile(db, customer.id)
+    user_with_profile = await get_user_with_profile(db, int(customer.id))
     return user_with_profile, customer_profile
-
 
 async def update_customer(
     db: AsyncSession, user_id: int, user_update, customer_profile_update
@@ -94,10 +92,13 @@ async def update_customer(
 
 
 async def delete_customer(db: AsyncSession, customer, profile):
-    await delete_access_token(user_id=customer.id, type="access_token")
-    await delete_access_token(user_id=customer.id, type="refresh_token")
-    await db.delete(customer)
+    # Delete tokens first
+    await delete_access_token(str(customer.id), "access_token")
+    await delete_access_token(str(customer.id), "refresh_token")
+    
+    # Then delete the database records
     await db.delete(profile)
+    await db.delete(customer)
     await db.commit()
 
 

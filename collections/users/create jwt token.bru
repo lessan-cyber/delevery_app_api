@@ -5,18 +5,14 @@ meta {
 }
 
 post {
-  url: http://localhost:8000/users/token?username=luas&password=string1234
+  url: http://localhost:8000/users/token
   body: json
   auth: inherit
 }
 
-params:query {
-  username: luas
-  password: string1234
-}
-
 body:json {
   {
-    "username":"luas"
+    "username": "luas@example.com",
+    "password": "string1234"
   }
 }

@@ -21,6 +21,28 @@ from app.db.database import Base
 
 
 class User(Base):
+    """
+    User model for authentication and profile linkage.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        id (int): Primary key.
+        username (str): Unique username.
+        email (str): Unique email address.
+        phone_number (str): Unique phone number.
+        hashed_password (str): Hashed user password.
+        full_name (str): Full name of the user.
+        is_active (bool): Whether the user is active.
+        is_superuser (bool): Whether the user is a superuser.
+        created_at (datetime): Creation timestamp.
+        updated_at (datetime): Last update timestamp.
+        role (str): User role (customer, driver, company, admin, etc.).
+        preferred_currency (str): User's preferred currency (default: USD).
+        customer_profile (CustomerProfile): One-to-one relationship.
+        driver_profile (DriverProfile): One-to-one relationship.
+        company_profile (CompanyProfile): One-to-one relationship.
+    """
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
@@ -49,6 +71,18 @@ class User(Base):
 
 
 class CustomerProfile(Base):
+    """
+    Customer profile model.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        user_id (int): Foreign key to User.
+        default_address (str): Default address for deliveries.
+        created_at (datetime): Creation timestamp.
+        updated_at (datetime): Last update timestamp.
+        user (User): Relationship to User.
+    """
     __tablename__ = "customer_profiles"
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     default_address = Column(Text)
@@ -59,6 +93,20 @@ class CustomerProfile(Base):
 
 
 class DriverProfile(Base):
+    """
+    Driver profile model.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        user_id (int): Foreign key to User.
+        license_number (str): Driver's license number.
+        vehicle_type (str): Type of vehicle.
+        is_verified (bool): Whether the driver is verified.
+        created_at (datetime): Creation timestamp.
+        updated_at (datetime): Last update timestamp.
+        user (User): Relationship to User.
+    """
     __tablename__ = "driver_profiles"
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     license_number = Column(String(50), nullable=False, unique=True, index=True)
@@ -71,6 +119,21 @@ class DriverProfile(Base):
 
 
 class CompanyProfile(Base):
+    """
+    Company profile model.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        user_id (int): Foreign key to User.
+        company_name (str): Name of the company.
+        business_type (str): Type of business.
+        company_id (str): Unique company identifier.
+        address (str): Company address.
+        created_at (datetime): Creation timestamp.
+        updated_at (datetime): Last update timestamp.
+        user (User): Relationship to User.
+    """
     __tablename__ = "company_profiles"
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     company_name = Column(String(100), nullable=False, unique=True)

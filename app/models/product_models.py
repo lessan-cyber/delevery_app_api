@@ -17,6 +17,18 @@ from app.db.database import Base
 
 
 class Category(Base):
+    """
+    Product category model.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        id (int): Primary key.
+        name (str): Category name.
+        description (str): Optional description.
+        created_at (datetime): Creation timestamp.
+        products (List[Product]): Many-to-many relationship with Product.
+    """
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -36,6 +48,17 @@ class Category(Base):
 
 
 class ProductImage(Base):
+    """
+    Product image model.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        id (int): Primary key.
+        image_url (str): URL of the product image.
+        product_id (int): Foreign key to Product.
+        product (Product): Relationship to Product.
+    """
     __tablename__ = "product_images"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -49,6 +72,21 @@ class ProductImage(Base):
 
 
 class Discount(Base):
+    """
+    Discount model for products.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        id (int): Primary key.
+        discount_percentage (Decimal): Discount percentage.
+        start_date (datetime): Start date of discount.
+        end_date (datetime): End date of discount.
+        product_id (int): Foreign key to Product.
+        created_at (datetime): Creation timestamp.
+        updated_at (datetime): Last update timestamp.
+        product (Product): Relationship to Product.
+    """
     __tablename__ = "discounts"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -73,6 +111,27 @@ class Discount(Base):
 
 
 class Product(Base):
+    """
+    Product model.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        id (int): Primary key.
+        name (str): Product name.
+        description (str): Product description.
+        price (Decimal): Product price.
+        image_url (str): Main image URL.
+        stock (int): Stock quantity.
+        seller_id (int): Foreign key to User.
+        currency (str): Currency code.
+        created_at (datetime): Creation timestamp.
+        updated_at (datetime): Last update timestamp.
+        categories (List[Category]): Many-to-many relationship.
+        images (List[ProductImage]): One-to-many relationship.
+        product_categories (List[ProductCategory]): Relationship to ProductCategory.
+        discounts (List[Discount]): One-to-many relationship.
+    """
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -110,6 +169,17 @@ class Product(Base):
 
 
 class ProductCategory(Base):
+    """
+    Association table for products and categories.
+
+    Use with AsyncSession and async SQLAlchemy operations.
+
+    Attributes:
+        product_id (int): Foreign key to Product.
+        category_id (int): Foreign key to Category.
+        product (Product): Relationship to Product.
+        category (Category): Relationship to Category.
+    """
     __tablename__ = "product_categories"
 
     product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)

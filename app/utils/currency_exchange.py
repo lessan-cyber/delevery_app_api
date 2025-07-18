@@ -1,6 +1,10 @@
 import requests , json
+import httpx
 from app.config import settings
 from app.db.redis import store_exchange_rate
+import asyncio
+import logging
+from datetime import datetime
 
 curenncies_exchange_api = {
   "AED": "United Arab Emirates Dirham",
@@ -176,20 +180,36 @@ curenncies_exchange_api = {
 }
 supported_currencies = [ "XOF","XAF", "USD", "EUR", "AED", "RUB"]
 
+logger = logging.getLogger("exchange_rate")
 
 async def get_exchange_rates():
-    api_id =  settings.exchange_api_id
+    """Fetch exchange rates from the external API and store filtered rates in Redis asynchronously.
+
+    Returns:
+        dict or None: Filtered exchange rates for supported currencies, or None if all attempts fail.
+    """
+    api_id = settings.exchange_api_id
     url = f"https://openexchangerates.org/api/latest.json?app_id={api_id}"
     headers = {"accept": "application/json"}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        rates = data.get("rates", {})
-        filtered_rates = {currency: rate for currency, rate in rates.items() if currency in supported_currencies}
-        await store_exchange_rate(exchange= json.dumps(filtered_rates))
-        return filtered_rates
-    else:
-        response.raise_for_status()
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                rates = data.get("rates", {})
+                filtered_rates = {currency: rate for currency, rate in rates.items() if currency in supported_currencies}
+                await store_exchange_rate(exchange=json.dumps(filtered_rates))
+                logger.info(f"Exchange rates updated successfully at {datetime.utcnow().isoformat()}")
+                return filtered_rates
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
+            logger.error(f"Attempt {attempt+1}: Failed to fetch exchange rates: {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(2 ** attempt)  # Exponential backoff
+            else:
+                logger.error("Max retries reached. Exchange rates not updated.")
+                return None
 
 
 async def convert_price(price: float, currency: str) -> str :

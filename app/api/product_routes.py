@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, Form, File , Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.schemas.product_schema import ProductCreate, ProductResponse, ProductUpdate, ProductWithDiscount
 from app.db import get_db
@@ -7,6 +7,7 @@ from app.core.auth import get_current_user
 from app.core.products_cruds import create_new_product, updateProduct , delete_product , get_product_with_discounts as get_product_with_discounts_crud
 from app.models.user_models import CompanyProfile, User
 import json
+from decimal import Decimal
 
 router = APIRouter(
     prefix="/products",
@@ -21,17 +22,16 @@ async def create_product_route(
     stock: int = Form(...),
     category_ids: List[int] = Form(...),
     images: List[UploadFile] = File(None),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     currency: str = Form(...)
-
 ):
-    # Check if user is a seller
-    company_profile = db.query(CompanyProfile).filter(CompanyProfile.user_id == current_user.id).first()
+    from sqlalchemy import select
+    result = await db.execute(select(CompanyProfile).where(CompanyProfile.user_id == current_user.id))
+    company_profile = result.scalar_one_or_none()
     if not company_profile:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="You are not allowed to create a product, only companies can create products")
 
-    # Ensure images is a list
     if images is None:
         images = []
     elif not isinstance(images, list):
@@ -40,26 +40,24 @@ async def create_product_route(
     product_in = ProductCreate(
         name=name,
         description=description,
-        price=price,
+        price=Decimal(str(price)),
         stock=stock,
         category_ids=category_ids,
         images=images,
-        seller_id=current_user.id ,
-        currency = currency
+        seller_id=current_user.id,
+        currency=currency
     )
 
     try:
-        new_product =await  create_new_product(db, product_in)
+        new_product = await create_new_product(db, product_in)
         return new_product
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
-    
+
 @router.put("/{product_id}", response_model=ProductResponse)
 async def update_product_route(
-    
     product_id: int,
     name: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
@@ -68,18 +66,18 @@ async def update_product_route(
     category_ids: str = Form(None),
     images: List[UploadFile] = File(None),
     currency: Optional[str] = Form(None),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Check if user is a seller
-    company_profile = db.query(CompanyProfile).filter(CompanyProfile.user_id == current_user.id).first()
+    from sqlalchemy import select
+    result = await db.execute(select(CompanyProfile).where(CompanyProfile.user_id == current_user.id))
+    company_profile = result.scalar_one_or_none()
     if not company_profile:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Only companies can update products"
         )
 
-    # Parse category_ids from JSON string if provided
     parsed_category_ids = None
     if category_ids:
         try:
@@ -95,7 +93,6 @@ async def update_product_route(
                 detail="Invalid JSON format for category_ids"
             )
 
-    # Ensure images is a list
     if images is not None:
         if not isinstance(images, list):
             images = [images]
@@ -103,7 +100,7 @@ async def update_product_route(
     product_update = ProductUpdate(
         name=name,
         description=description,
-        price=price,
+        price=Decimal(str(price)) if price is not None else None,
         stock=stock,
         category_ids=parsed_category_ids,
         images=images,
@@ -120,23 +117,23 @@ async def update_product_route(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=str(e)
         )
-    
 
 @router.delete("/{product_id}", status_code=status.HTTP_200_OK)
 async def delete_product_route(
     product_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     await delete_product(db, product_id, current_user.id)
     return {"message": "Product deleted successfully"}
 
-
 @router.get("/{product_id}", response_model=ProductWithDiscount)
 async def get_product_with_discounts(
     request: Request,
     product_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
-    print(request.client.host)
+    # Defensive: request.client can be None
+    client_host = request.client.host if request.client else None
+    print(client_host)
     return await get_product_with_discounts_crud(db, product_id)

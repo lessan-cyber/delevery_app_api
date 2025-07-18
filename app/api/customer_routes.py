@@ -14,6 +14,7 @@ from app.models.user_models import CustomerProfile, User
 from ..utils import validate_user, get_user_response, validate_user_inputs_on_update
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.auth import delete_access_token
 
 router = APIRouter(prefix="/customers", tags=["Customers"])
 
@@ -101,10 +102,16 @@ async def delete_customer_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
         )
     try:
+        # Delete user's tokens first
+        await delete_access_token(str(current_user.id), "access_token")
+        await delete_access_token(str(current_user.id), "refresh_token")
+        
+        # Then delete the customer and profile
         await delete_customer(db, customer, existing_profile)
         return {
             "detail": "Customer and customer profile deleted successfully",
             "status": status.HTTP_200_OK,
         }
     except Exception as e:
+        print(f"Error deleting customer: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))

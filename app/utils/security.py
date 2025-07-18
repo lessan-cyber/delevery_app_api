@@ -84,8 +84,6 @@ async def validate_user_inputs_on_update(db: AsyncSession, user_id: int, user_up
     if not filters:
         print("No fields to validate")
         return  # Nothing to check
-        
-    from sqlalchemy import or_, and_, select
 
     stmt = select(User).where(User.id != user_id, or_(*filters))
     print(f"SQL Query: {stmt}")
